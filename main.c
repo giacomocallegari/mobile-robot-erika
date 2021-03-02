@@ -44,8 +44,8 @@
  *
  *  This file contains the code of main application for Erika Enterprise.
  *
- *  \author	Giuseppe Serano
- *  \date	2018
+ *  \author	Giacomo Callegari
+ *  \date	2021
  */
 
 /* ERIKA Enterprise. */
@@ -60,14 +60,16 @@
 OsEE_bool volatile stk_wrong = OSEE_FALSE;
 OsEE_addr volatile old_sp;
 uint32_t volatile idle_cnt;
+uint16_t volatile TaskControl_count;
 
-DeclareTask(Task1);
+DeclareTask(TaskControl);
 extern void idle_hook(void);
 extern void StartupHook(void);
 
 #define	IDLE_CNT_MAX	1000000U
-
 #define	IDLE_STR	(P2CONST(uint8_t, AUTOMATIC, OS_APPL_DATA))"Idle\r\n"
+#define TASK_STR  (P2CONST(uint8_t, AUTOMATIC, OS_APPL_DATA))"TaskControl\r\n"
+#define HAL_DELAY_MS  1000U
 
 void StartupHook(void)
 {
@@ -114,7 +116,7 @@ void idle_hook(void)
 	++idle_cnt;
 	if (idle_cnt >= IDLE_CNT_MAX) {
 		idle_cnt = 0;
-		ActivateTask(Task1);
+		ActivateTask(TaskControl);
 		DemoHAL_LedToggle(DEMO_HAL_LED_0);
 		serial_print(IDLE_STR);
 	}
@@ -131,4 +133,34 @@ int main(void)
 	StartOS(OSDEFAULTAPPMODE);
 
 	return 0;
+}
+
+TASK(TaskControl)
+{
+  static OsEE_bool volatile stk_wrong = OSEE_FALSE;
+  static OsEE_addr volatile old_sp = 0;
+
+  serial_print(TASK_STR);
+
+  DemoHAL_LedOn(DEMO_HAL_LED_7);
+
+  DemoHAL_Delay(HAL_DELAY_MS);
+
+  DemoHAL_LedOff(DEMO_HAL_LED_7);
+
+  DemoHAL_Delay(HAL_DELAY_MS);
+
+  if ( !stk_wrong ) {
+    if (!old_sp) {
+      old_sp = osEE_get_SP();
+    }
+    else if (old_sp != osEE_get_SP()) {
+      stk_wrong = OSEE_TRUE;
+      OSEE_BREAK_POINT();
+    }
+  }
+
+  ++TaskControl_count;
+
+  TerminateTask();
 }

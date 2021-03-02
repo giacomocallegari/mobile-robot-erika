@@ -54,11 +54,7 @@
 /* HAL */
 #include "hal.h"
 
-#define	HAL_DELAY_MS	1000U
 
-#define	TASK_STR	(P2CONST(uint8_t, AUTOMATIC, OS_APPL_DATA))"Task1\r\n"
-
-uint16_t volatile Task1_count;
 
 extern void serial_print(char const * msg);
 extern void print_sp(TaskType tid, OsEE_addr sp);
@@ -72,32 +68,3 @@ extern void print_sp(TaskType tid, OsEE_addr sp);
     }                                                               \
   } while ( 0 )
 
-TASK(Task1)
-{
-	static OsEE_bool volatile stk_wrong = OSEE_FALSE;
-	static OsEE_addr volatile old_sp = 0;
-
-	serial_print(TASK_STR);
-
-	DemoHAL_LedOn(DEMO_HAL_LED_7);
-
-	DemoHAL_Delay(HAL_DELAY_MS);
-
-	DemoHAL_LedOff(DEMO_HAL_LED_7);
-
-	DemoHAL_Delay(HAL_DELAY_MS);
-
-	if ( !stk_wrong ) {
-		if (!old_sp) {
-			old_sp = osEE_get_SP();
-		}
-		else if (old_sp != osEE_get_SP()) {
-			stk_wrong = OSEE_TRUE;
-			OSEE_BREAK_POINT();
-		}
-	}
-
-	++Task1_count;
-
-	TerminateTask();
-}
