@@ -284,20 +284,20 @@ TASK(TaskControl) {
 
     // Set the PWM for motor 1.
     if (value_M1 > 0) {
-      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_4);
+      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_4);
       PWM_Set(0, TIM_CHANNEL_3);
     } else {
       PWM_Set(0, TIM_CHANNEL_4);
-      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_3);
+      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_3);
     }
 
     // Set the PWM for motor 2.
     if (value_M2 > 0) {
-      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_1);
+      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_1);
       PWM_Set(0, TIM_CHANNEL_2);
     } else {
       PWM_Set(0, TIM_CHANNEL_1);
-      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_2);
+      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_2);
     }
 
     // Update the variables for motor 1.
@@ -363,11 +363,49 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
 }
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
+ * @brief  EXTI line detection callbacks.
+ * @param  GPIO_Pin Specifies the pins connected EXTI line
+ * @retval None
+ */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  // Find the channel and update the counter depending on the direction.
+  if (GPIO_Pin == CHANNEL_A_M1_Pin) {
+    if (channelA_M1_old == channelB_M1_old) {
+      counterRelativeEncoder_M1++;
+    } else {
+      counterRelativeEncoder_M1--;
+    }
+    channelA_M1_old = HAL_GPIO_ReadPin(CHANNEL_A_M1_GPIO_Port, CHANNEL_A_M1_Pin);
+  } else if (GPIO_Pin == CHANNEL_B_M1_Pin) {
+    if (channelA_M1_old != channelB_M1_old) {
+      counterRelativeEncoder_M1++;
+    } else {
+      counterRelativeEncoder_M1--;
+    }
+    channelB_M1_old = HAL_GPIO_ReadPin(CHANNEL_B_M1_GPIO_Port, CHANNEL_B_M1_Pin);
+  } else if (GPIO_Pin == CHANNEL_A_M2_Pin) {
+    if (channelA_M2_old == channelB_M2_old) {
+      counterRelativeEncoder_M2++;
+    } else {
+      counterRelativeEncoder_M2--;
+    }
+    channelA_M2_old = HAL_GPIO_ReadPin(CHANNEL_A_M2_GPIO_Port, CHANNEL_A_M2_Pin);
+  } else if (GPIO_Pin == CHANNEL_B_M2_Pin) {
+    if (channelA_M2_old != channelB_M2_old) {
+      counterRelativeEncoder_M2++;
+    } else {
+      counterRelativeEncoder_M2--;
+    }
+    channelB_M2_old = HAL_GPIO_ReadPin(CHANNEL_B_M2_GPIO_Port, CHANNEL_B_M2_Pin);
+  }
+  return;
+}
+
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
 
