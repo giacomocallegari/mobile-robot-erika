@@ -67,8 +67,7 @@ OsEE_addr volatile old_sp;
 uint32_t volatile idle_cnt;
 uint16_t volatile TaskControl_count;
 
-/* VARIABLES FOR THE ROBOT */
-
+/* ROBOT VARIABLES --------------------------------------------------------- */
 int counterRelativeEncoder_M1 = 0;
 int counterRelativeEncoder_M1Old = 0;
 int counterRelativeEncoder_M2 = 0;
@@ -97,7 +96,9 @@ float integral_M1 = 0.0;
 float integral_M2 = 0.0;
 float derivative_M1 = 0.0;
 float derivative_M2 = 0.0;
+/* ------------------------------------------------------------------------- */
 
+/* USART VARIABLES --------------------------------------------------------- */
 UART_HandleTypeDef * huartOP = &huart1;
 UART_HandleTypeDef * huartUSER = &huart2;
 
@@ -110,33 +111,37 @@ uint8_t temp_usartOP;
 uint8_t message_usartOP[512];
 uint8_t message_received_usartOP = 0;
 uint8_t message_length_usartOP = 0;
+/* ------------------------------------------------------------------------- */
 
-/////////////////////////////////////////////////////
+/* ROBOT PARAMETERS -------------------------------------------------------- */
+float omegaDes = 0.3;  // Desired angular velocity of the robot
+float velDes = 0.05;  // Desired linear velocity of the robot
 
-float omegaDes = 0.3;
-float velDes = 0.05;
+float velDes_M1 = 0.0;  // Desired angular velocity of motor 1
+float velDes_M2 = 0.0;  // Desired angular velocity of motor 2
 
-float velDes_M1 = 0.0;
-float velDes_M2 = 0.0;
-
-float tickToTheta = 360.0 / (26);
-float Rr = 210;
+float tickToTheta = 360.0 / (26);  // Angular distance between two ticks
+float Rr = 210;  // Gear ratio
 float borderVel = 0.01;
 float targetVel = 0.04;
-float wheelRadius = 0.023 / 2.0;
-float rearTrack = 0.144;
-float theta_des = 0.0;
-float vehicleLength = 0.11;
-float vehicleWidth = 0.15;
+float wheelRadius = 0.023 / 2.0;  // Radius of each wheel; 0.22 works
+float rearTrack = 0.144;  // Distance between the wheels; 0.1455 works
+float theta_des = 0.0;  // Desired angle of the robot
+float vehicleLength = 0.11;  // Length of the robot
+float vehicleWidth = 0.15;  // Width of the robot
 
-float fromDegSToRPM = 60.0 / 360.0;
-float fromRPMtoRads = 2.0 * M_PI / 60.0;
+float fromDegSToRPM = 60.0 / 360.0;  // Conversion from degrees to RPM
+float fromRPMtoRads = 2.0 * M_PI / 60.0;  // Conversion from RPM to radians
+/* ------------------------------------------------------------------------- */
 
-/* -------------------------- */
-
+/* HELPER FUNCTIONS -------------------------------------------------------- */
 void PWM_Set(uint32_t value, uint32_t Channel);
 void resetPWM();
+char DEBUG_usart_getchar(void);
+int DEBUG_usart_print(char* buffer);
+/* ------------------------------------------------------------------------- */
 
+/* ERIKA FUNCTIONS AND VARIABLES ------------------------------------------- */
 DeclareTask(TaskControl);
 extern void idle_hook(void);
 extern void StartupHook(void);
@@ -194,6 +199,7 @@ void idle_hook(void) {
 
   DemoHAL_MainFunction();
 }
+/* ------------------------------------------------------------------------- */
 
 /**
  * Main function.
@@ -203,6 +209,9 @@ void idle_hook(void) {
 int main(void) {
   // Initialize the peripherals.
   DemoHAL_Init();
+
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
 
   // Start the RTOS.
   StartOS(OSDEFAULTAPPMODE);
@@ -336,20 +345,20 @@ TASK(TaskControl) {
 
     // Set the PWM for motor 1.
     if (value_M1 > 0) {
-      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_4);
+      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_4);
       PWM_Set(0, TIM_CHANNEL_3);
     } else {
       PWM_Set(0, TIM_CHANNEL_4);
-      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_3);
+      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_3);
     }
 
     // Set the PWM for motor 2.
     if (value_M2 > 0) {
-      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_1);
+      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_1);
       PWM_Set(0, TIM_CHANNEL_2);
     } else {
       PWM_Set(0, TIM_CHANNEL_1);
-      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_2);
+      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_2);
     }
 
     // Update the variables for motor 1.
@@ -396,19 +405,19 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
   // Apply PWM to the selected channel.
   switch (Channel) {
   case TIM_CHANNEL_1: {
-    //htim3.Instance->CCR1 = value;  // TODO: Find CCR
+    htim3.Instance->CCR1 = value;
     break;
   }
   case TIM_CHANNEL_2: {
-    //htim3.Instance->CCR2 = value;
+    htim3.Instance->CCR2 = value;
     break;
   }
   case TIM_CHANNEL_3: {
-    //htim3.Instance->CCR3 = value;
+    htim3.Instance->CCR3 = value;
     break;
   }
   case TIM_CHANNEL_4: {
-    //htim3.Instance->CCR4 = value;
+    htim3.Instance->CCR4 = value;
     break;
   }
   }
