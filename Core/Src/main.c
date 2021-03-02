@@ -57,6 +57,7 @@
 #include "main.h"
 #include "tim.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -192,11 +193,14 @@ int main(void) {
 TASK(TaskControl) {
   float dt = 0.02;
 
+  // Set the parameters for the PID controller.
   float kp = 0.06;
   float ki = 0.00;
   float kd = 0.01;
 
-  int initialTime = xTaskGetTickCount();
+  // Get the current time.
+  int initialTime = HAL_GetTick();
+  //int initialTime = xTaskGetTickCount();
 
   int decimator = 0;
 
@@ -204,39 +208,43 @@ TASK(TaskControl) {
   float derivative_M1 = 0.0;
 
   for (;;) {
+    // Toggle the LED every 10 iterations.
     if (decimator++ % 10 == 0) {
-      HAL_GPIO_TogglePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin);
+      DemoHAL_LedToggle(DEMO_HAL_LED_2);
+      //HAL_GPIO_TogglePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin);
     }
 
+    // Compute the tick difference from the previous iteration.
     counterDiff_M1 = counterRelativeEncoder_M1 - counterRelativeEncoder_M1Old;
     counterDiff_M2 = counterRelativeEncoder_M2 - counterRelativeEncoder_M2Old;
     counterRelativeEncoder_M1Old = counterRelativeEncoder_M1;
     counterRelativeEncoder_M2Old = counterRelativeEncoder_M2;
-    //Left estimated speed
-    estimatedSpeed_M1 = ((float) counterDiff_M1 / dt) * tickToTheta * fromDegSToRPM; //from delta_tick/s to rpm of the motor
-    //Right estimated speed
-    estimatedSpeed_M2 = -((float) counterDiff_M2 / dt) * tickToTheta * fromDegSToRPM; //from delta_tick/s to rpm of the motor
 
-    //From v and omega to omegaR and omegaL
+    // Estimate the speed in RPM of each motor.
+    estimatedSpeed_M1 = ((float) counterDiff_M1 / dt) * tickToTheta * fromDegSToRPM;
+    estimatedSpeed_M2 = -((float) counterDiff_M2 / dt) * tickToTheta * fromDegSToRPM;
+
+    // Find the desired velocity for each wheel.
     float omegaR = 0.5 * (omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
     float omegaL = 0.5 * (-omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
 
-    //From omegeR and omegaL to rmp M1 and rpm M2
+    // Convert the desired velocities to RPM.
     velDes_M2 = omegaL * Rr * 60.0 / (2.0 * 3.14);
     velDes_M1 = omegaR * Rr * 60.0 / (2.0 * 3.14);
 
-    //PID CONTROLLER M1
+    // Use PID to get the control value for motor 1.
     error_M1 = velDes_M1 - estimatedSpeed_M1;
     integral_M1 = integral_M1 + error_M1 * dt;
     derivative_M1 = (error_M1 - error_old_M1) / dt;
     value_M1 = value_old_M1 + kp * (error_M1) + ki * integral_M1 + kd * derivative_M1;
 
-    //PID CONTROLLER M2
+    // Use PID to get the control value for motor 2.
     error_M2 = velDes_M2 - estimatedSpeed_M2;
     integral_M2 = integral_M2 + error_M2 * dt;
     derivative_M2 = (error_M2 - error_old_M2) / dt;
     value_M2 = value_old_M2 + kp * (error_M2) + ki * integral_M2 + kd * derivative_M2;
 
+    // Find the sign for the velocities.
     float signM1 = 1.0;
     float signM2 = 1.0;
     if (velDes_M1 > 0) {
@@ -250,7 +258,7 @@ TASK(TaskControl) {
       signM2 = -1.0;
     }
 
-    //SATURATION OF PWM
+    // Saturate the PWM values within the limits.
     if (fabs(value_M1) > upperMotorLimit) {
       value_M1 = upperMotorLimit;
     } else if (fabs(value_M1) < lowerMotorLimit) {
@@ -264,6 +272,7 @@ TASK(TaskControl) {
     value_M1 = fabs(value_M1) * signM1;
     value_M2 = fabs(value_M2) * signM2;
 
+    // Set the PWM for motor 1.
     if (value_M1 > 0) {
       PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_4);
       PWM_Set(0, TIM_CHANNEL_3);
@@ -272,6 +281,7 @@ TASK(TaskControl) {
       PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_3);
     }
 
+    // Set the PWM for motor 2.
     if (value_M2 > 0) {
       PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_1);
       PWM_Set(0, TIM_CHANNEL_2);
@@ -280,13 +290,17 @@ TASK(TaskControl) {
       PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_2);
     }
 
+    // Update the variables for motor 1.
     error_old_M1 = error_M1;
     value_old_M1 = value_M1;
 
+    // Update the variables for motor 2.
     error_old_M2 = error_M2;
     value_old_M2 = value_M2;
 
-    osDelay(20);
+    // Sleep until the next activation.
+    HAL_Delay(20);
+    //osDelay(20);
   }
 
   TerminateTask();
@@ -317,9 +331,10 @@ void resetPWM() {
  * @param Channel   The output channel
  */
 void PWM_Set(uint32_t value, uint32_t Channel) {
+  // Apply PWM to the selected channel.
   switch (Channel) {
   case TIM_CHANNEL_1: {
-    htim3.Instance->CCR1 = value;
+    htim3.Instance->CCR1 = value;  // TODO: Find CCR
     break;
   }
   case TIM_CHANNEL_2: {
