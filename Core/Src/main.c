@@ -55,17 +55,13 @@
 #include "hal.h"
 
 #include "main.h"
+#include "gpio.h"
 #include "tim.h"
 #include "usart.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-
-OsEE_bool volatile stk_wrong = OSEE_FALSE;
-OsEE_addr volatile old_sp;
-uint32_t volatile idle_cnt;
-uint16_t volatile TaskControl_count;
 
 /* ROBOT VARIABLES --------------------------------------------------------- */
 int counterRelativeEncoder_M1 = 0;
@@ -142,6 +138,11 @@ int DEBUG_usart_print(char* buffer);
 /* ------------------------------------------------------------------------- */
 
 /* ERIKA FUNCTIONS AND VARIABLES ------------------------------------------- */
+OsEE_bool volatile stk_wrong = OSEE_FALSE;
+OsEE_addr volatile old_sp;
+uint32_t volatile idle_cnt;
+uint16_t volatile TaskControl_count;
+
 DeclareTask(TaskControl);
 extern void idle_hook(void);
 extern void StartupHook(void);
@@ -211,6 +212,7 @@ int main(void) {
   DemoHAL_Init();
 
   // Initialize the peripherals.
+  MX_GPIO_Init();
   MX_TIM3_Init();
   MX_TIM6_Init();
   MX_USART1_UART_Init();
@@ -222,7 +224,9 @@ int main(void) {
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 
-  // TODO: Initialize GPIO
+  // Enable the motors and turn on the LED.
+  HAL_GPIO_WritePin(ENABLE_MOTOR_GPIO_Port, ENABLE_MOTOR_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
 
   HAL_Delay(1000);
 

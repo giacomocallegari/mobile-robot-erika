@@ -92,6 +92,7 @@ CPU mySystem {
   APPDATA myApp {
     APP_SRC = "Core/Src/main.c";
     
+    APP_SRC = "Core/Src/gpio.c";
     APP_SRC = "Core/Src/hal.c";
     APP_SRC = "Core/Src/tim.c";
     APP_SRC = "Core/Src/usart.c";
