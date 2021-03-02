@@ -60,6 +60,8 @@ extern "C" {
 
 #include "stm32f4xx_hal.h"
 
+void Error_Handler(void);
+
 #define CHANNEL_A_M1_Pin GPIO_PIN_0
 #define CHANNEL_A_M1_GPIO_Port GPIOC
 #define CHANNEL_A_M1_EXTI_IRQn EXTI0_IRQn

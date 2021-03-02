@@ -91,10 +91,11 @@ CPU mySystem {
     APP_SRC = "Core/Src/main.c";
     
     APP_SRC = "Core/Src/hal.c";
-    APP_SRC = "Core/Src/stm32f4xx_hal_msp.c";
-    APP_SRC = "Core/Src/stm32f4xx_it.c";
-    APP_SRC = "Core/Src/system_stm32f4xx.c";
-    APP_SRC = "Core/Src/tim.c";
+    APP_SRC = "Core/Src/tim.c";    
+    
+    //APP_SRC = "Core/Src/stm32f4xx_hal_msp.c";
+    //APP_SRC = "Core/Src/stm32f4xx_it.c";
+    //APP_SRC = "Core/Src/system_stm32f4xx.c";
   };
 
   TASK TaskControl {

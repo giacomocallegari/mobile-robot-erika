@@ -74,10 +74,14 @@ int counterRelativeEncoder_M2 = 0;
 int counterRelativeEncoder_M2Old = 0;
 int counterDiff_M1 = 0;
 int counterDiff_M2 = 0;
+GPIO_PinState channelA_M1_old = 0;
+GPIO_PinState channelB_M1_old = 0;
+GPIO_PinState channelA_M2_old = 0;
+GPIO_PinState channelB_M2_old = 0;
 
+int RTOS_dTime = 0;
 float lowerMotorLimit = 2000;
 float upperMotorLimit = 10000;
-
 float estimatedSpeed_M1 = 0.0;
 float estimatedSpeed_M2 = 0.0;
 float value_M1 = 0.0;
@@ -103,10 +107,16 @@ float velDes_M2 = 0.0;
 
 float tickToTheta = 360.0 / (26);
 float Rr = 210;
+float borderVel = 0.01;
+float targetVel = 0.04;
 float wheelRadius = 0.023 / 2.0;
 float rearTrack = 0.144;
+float theta_des = 0.0;
+float vehicleLength = 0.11;
+float vehicleWidth = 0.15;
 
 float fromDegSToRPM = 60.0 / 360.0;
+float fromRPMtoRads = 2.0 * M_PI / 60.0;
 
 /* -------------------------- */
 
@@ -334,20 +344,32 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
   // Apply PWM to the selected channel.
   switch (Channel) {
   case TIM_CHANNEL_1: {
-    htim3.Instance->CCR1 = value;  // TODO: Find CCR
+    //htim3.Instance->CCR1 = value;  // TODO: Find CCR
     break;
   }
   case TIM_CHANNEL_2: {
-    htim3.Instance->CCR2 = value;
+    //htim3.Instance->CCR2 = value;
     break;
   }
   case TIM_CHANNEL_3: {
-    htim3.Instance->CCR3 = value;
+    //htim3.Instance->CCR3 = value;
     break;
   }
   case TIM_CHANNEL_4: {
-    htim3.Instance->CCR4 = value;
+    //htim3.Instance->CCR4 = value;
     break;
   }
   }
+}
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+
+  /* USER CODE END Error_Handler_Debug */
 }
