@@ -55,6 +55,7 @@
 #include "hal.h"
 
 #include "main.h"
+#include "gpio.h"
 #include "tim.h"
 
 #include <math.h>
@@ -189,12 +190,50 @@ void idle_hook(void) {
 int main(void) {
   // Initialize the peripherals.
   DemoHAL_Init();
-  DemoHAL_LedInit();
 
   // Start the RTOS.
   StartOS(OSDEFAULTAPPMODE);
 
   return 0;
+}
+
+/**
+ * @brief  EXTI line detection callbacks.
+ * @param  GPIO_Pin Specifies the pins connected EXTI line
+ * @retval None
+ */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  // Find the channel and update the counter depending on the direction.
+  if (GPIO_Pin == CHANNEL_A_M1_Pin) {
+    if (channelA_M1_old == channelB_M1_old) {
+      counterRelativeEncoder_M1++;
+    } else {
+      counterRelativeEncoder_M1--;
+    }
+    channelA_M1_old = HAL_GPIO_ReadPin(CHANNEL_A_M1_GPIO_Port, CHANNEL_A_M1_Pin);
+  } else if (GPIO_Pin == CHANNEL_B_M1_Pin) {
+    if (channelA_M1_old != channelB_M1_old) {
+      counterRelativeEncoder_M1++;
+    } else {
+      counterRelativeEncoder_M1--;
+    }
+    channelB_M1_old = HAL_GPIO_ReadPin(CHANNEL_B_M1_GPIO_Port, CHANNEL_B_M1_Pin);
+  } else if (GPIO_Pin == CHANNEL_A_M2_Pin) {
+    if (channelA_M2_old == channelB_M2_old) {
+      counterRelativeEncoder_M2++;
+    } else {
+      counterRelativeEncoder_M2--;
+    }
+    channelA_M2_old = HAL_GPIO_ReadPin(CHANNEL_A_M2_GPIO_Port, CHANNEL_A_M2_Pin);
+  } else if (GPIO_Pin == CHANNEL_B_M2_Pin) {
+    if (channelA_M2_old != channelB_M2_old) {
+      counterRelativeEncoder_M2++;
+    } else {
+      counterRelativeEncoder_M2--;
+    }
+    channelB_M2_old = HAL_GPIO_ReadPin(CHANNEL_B_M2_GPIO_Port, CHANNEL_B_M2_Pin);
+  }
+  return;
 }
 
 /**
@@ -360,45 +399,6 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
     break;
   }
   }
-}
-
-/**
- * @brief  EXTI line detection callbacks.
- * @param  GPIO_Pin Specifies the pins connected EXTI line
- * @retval None
- */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  // Find the channel and update the counter depending on the direction.
-  if (GPIO_Pin == CHANNEL_A_M1_Pin) {
-    if (channelA_M1_old == channelB_M1_old) {
-      counterRelativeEncoder_M1++;
-    } else {
-      counterRelativeEncoder_M1--;
-    }
-    channelA_M1_old = HAL_GPIO_ReadPin(CHANNEL_A_M1_GPIO_Port, CHANNEL_A_M1_Pin);
-  } else if (GPIO_Pin == CHANNEL_B_M1_Pin) {
-    if (channelA_M1_old != channelB_M1_old) {
-      counterRelativeEncoder_M1++;
-    } else {
-      counterRelativeEncoder_M1--;
-    }
-    channelB_M1_old = HAL_GPIO_ReadPin(CHANNEL_B_M1_GPIO_Port, CHANNEL_B_M1_Pin);
-  } else if (GPIO_Pin == CHANNEL_A_M2_Pin) {
-    if (channelA_M2_old == channelB_M2_old) {
-      counterRelativeEncoder_M2++;
-    } else {
-      counterRelativeEncoder_M2--;
-    }
-    channelA_M2_old = HAL_GPIO_ReadPin(CHANNEL_A_M2_GPIO_Port, CHANNEL_A_M2_Pin);
-  } else if (GPIO_Pin == CHANNEL_B_M2_Pin) {
-    if (channelA_M2_old != channelB_M2_old) {
-      counterRelativeEncoder_M2++;
-    } else {
-      counterRelativeEncoder_M2--;
-    }
-    channelB_M2_old = HAL_GPIO_ReadPin(CHANNEL_B_M2_GPIO_Port, CHANNEL_B_M2_Pin);
-  }
-  return;
 }
 
 /**
