@@ -55,6 +55,8 @@ CPU mySystem {
     EE_OPT = "OS_EE_BUILD_DEBUG";
 //    EE_OPT = "OS_EE_VERBOSE";
 
+	CFLAGS = "-I../Core/Inc/";
+
     USERESSCHEDULER = FALSE;
 
     CPU_DATA = CORTEX_M {
@@ -86,8 +88,8 @@ CPU mySystem {
   };
 
   APPDATA myApp {
-    APP_SRC = "main.c";
-    APP_SRC = "hal.c";
+    APP_SRC = "Core/Src/main.c";
+    APP_SRC = "Core/Src/hal.c";
   };
 
   TASK TaskControl {

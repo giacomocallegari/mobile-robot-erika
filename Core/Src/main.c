@@ -54,6 +54,9 @@
 /* HAL */
 #include "hal.h"
 
+#include "main.h"
+#include "tim.h"
+
 #include <stdio.h>
 #include <string.h>
 
