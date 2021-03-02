@@ -55,8 +55,8 @@
 #include "hal.h"
 
 #include "main.h"
-#include "gpio.h"
 #include "tim.h"
+#include "usart.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -97,6 +97,19 @@ float integral_M1 = 0.0;
 float integral_M2 = 0.0;
 float derivative_M1 = 0.0;
 float derivative_M2 = 0.0;
+
+UART_HandleTypeDef * huartOP = &huart1;
+UART_HandleTypeDef * huartUSER = &huart2;
+
+uint8_t temp_usartUSER;
+uint8_t message_usartUSER[512];
+uint8_t message_received_usartUSER = 0;
+uint8_t message_length_usartUSER = 0;
+
+uint8_t temp_usartOP;
+uint8_t message_usartOP[512];
+uint8_t message_received_usartOP = 0;
+uint8_t message_length_usartOP = 0;
 
 /////////////////////////////////////////////////////
 
@@ -323,20 +336,20 @@ TASK(TaskControl) {
 
     // Set the PWM for motor 1.
     if (value_M1 > 0) {
-      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_4);
+      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_4);
       PWM_Set(0, TIM_CHANNEL_3);
     } else {
       PWM_Set(0, TIM_CHANNEL_4);
-      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_3);
+      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_3);
     }
 
     // Set the PWM for motor 2.
     if (value_M2 > 0) {
-      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_1);
+      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_1);
       PWM_Set(0, TIM_CHANNEL_2);
     } else {
       PWM_Set(0, TIM_CHANNEL_1);
-      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_2);
+      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_2);
     }
 
     // Update the variables for motor 1.
@@ -402,12 +415,52 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
 }
 
 /**
+ * Callback that is invoked at the completion of the UART reception.
+ *
+ * @param huart   The UART handle
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  if (huart == huartUSER) {
+    HAL_UART_Receive_IT(huartUSER, &temp_usartUSER, 1);
+  } else if (huart == huartOP) {
+  }
+}
+
+/**
+ * Sends a string to a buffer through USART.
+ *
+ * @param buffer  The destination buffer
+ * @return
+ */
+int DEBUG_usart_print(char* buffer) {
+  return 0;
+
+  if (HAL_UART_Transmit(&huart1, (uint8_t *) buffer, strlen(buffer), 1000) != HAL_OK) {
+    return -1;
+  }
+
+  return 0;
+}
+
+/**
+ * Receives a single character through USART.
+ *
+ * @return
+ */
+char DEBUG_usart_getchar(void) {
+  char rxChar;
+
+  if (HAL_UART_Receive(&huart1, (uint8_t *) &rxChar, 1, 100) != HAL_OK) {
+    return '\0';
+  }
+
+  return rxChar;
+}
+
+/**
  * @brief  This function is executed in case of error occurrence.
  * @retval None
  */
 void Error_Handler(void) {
-  /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
-  /* USER CODE END Error_Handler_Debug */
 }

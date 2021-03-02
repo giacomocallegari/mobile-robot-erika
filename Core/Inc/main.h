@@ -51,9 +51,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-/* ERIKA Enterprise. */
-//#include "ee.h"
-
 #if (defined(__cplusplus))
 extern "C" {
 #endif

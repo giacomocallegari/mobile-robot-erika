@@ -94,6 +94,7 @@ CPU mySystem {
     
     APP_SRC = "Core/Src/hal.c";
     APP_SRC = "Core/Src/tim.c";
+    APP_SRC = "Core/Src/usart.c";
     
     APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c";
     APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c";
