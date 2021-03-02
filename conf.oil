@@ -91,9 +91,9 @@ CPU mySystem {
   };
 
   TASK TaskControl {
-    PRIORITY = 1;
+    PRIORITY = 3;
     STACK = PRIVATE {
-      SIZE = 512;
+      SIZE = 1024;
     };
   };
 
