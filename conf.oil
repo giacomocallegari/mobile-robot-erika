@@ -62,9 +62,9 @@ CPU mySystem {
     CPU_DATA = CORTEX_M {
       MODEL = M4;
       MULTI_STACK = TRUE;
-      IDLEHOOK = TRUE {
+      /*IDLEHOOK = TRUE {
         HOOKNAME = "idle_hook";
-      };
+      };*/
     };
 
     MCU_DATA = STM32F4 {
@@ -101,6 +101,7 @@ CPU mySystem {
     STACK = PRIVATE {
       SIZE = 1024;
     };
+    AUTOSTART = TRUE;
   };
 
 };

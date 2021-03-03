@@ -124,7 +124,7 @@ float vehicleWidth = 0.15;  // Width of the robot
 
 float fromDegSToRPM = 60.0 / 360.0;  // Conversion from degrees to RPM
 float fromRPMtoRads = 2.0 * M_PI / 60.0;  // Conversion from RPM to radians
-    /* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 
 /* HELPER FUNCTIONS -------------------------------------------------------- */
 void PWM_Set(uint32_t value, uint32_t Channel);
@@ -168,7 +168,7 @@ void idle_hook(void) {
   if (idle_cnt >= IDLE_CNT_MAX) {
     idle_cnt = 0;
     ActivateTask(TaskControl);
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+    HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
   }
 }
 /* ------------------------------------------------------------------------- */
@@ -190,19 +190,19 @@ int main(void) {
   MX_USART2_UART_Init();
 
   // Start the PWM generation.
-   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 
-   // Enable the motors and turn on the LED.
-   HAL_GPIO_WritePin(ENABLE_MOTOR_GPIO_Port, ENABLE_MOTOR_Pin, GPIO_PIN_SET);
-   HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
+  // Enable the motors and turn on the LED.
+  HAL_GPIO_WritePin(ENABLE_MOTOR_GPIO_Port, ENABLE_MOTOR_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
 
-   HAL_Delay(1000);
+  HAL_Delay(1000);
 
-   // Start the RTOS.
-   StartOS(OSDEFAULTAPPMODE);
+  // Start the RTOS.
+  StartOS(OSDEFAULTAPPMODE);
 
   return 0;
 }
