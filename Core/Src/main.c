@@ -51,7 +51,9 @@
 #include "ee.h"
 
 #include "main.h"
+//#include "adc.h"
 #include "gpio.h"
+//#include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 
@@ -181,10 +183,15 @@ void idle_hook(void) {
 int main(void) {
   // Initialize the system.
   HAL_Init();
-  //SystemClock_Config();  // TODO: Enable clock configuration
+  SystemClock_Config();
 
   // Initialize the peripherals.
+  /*MX_ADC1_Init();
+  MX_ADC2_Init();*/
   MX_GPIO_Init();
+  /*MX_I2C1_Init();
+  MX_I2C2_Init();
+  MX_I2C4_Init();*/
   MX_TIM3_Init();
   MX_TIM6_Init();
   MX_USART1_UART_Init();
@@ -213,57 +220,42 @@ int main(void) {
  * @retval None
  */
 void SystemClock_Config(void) {
-  RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct;
+	RCC_OscInitTypeDef RCC_OscInitStruct;
 
-  /** Configure the main internal regulator output voltage
-   */
-  __HAL_RCC_PWR_CLK_ENABLE()
-  ;
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks
-   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 216;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-    Error_Handler();
-  }
-  /** Activate the Over-Drive mode
-   */
-  if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
-    Error_Handler();
-  }
-  /** Initializes the CPU, AHB and APB busses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+	/* Enable Power Control clock */
+	__HAL_RCC_PWR_CLK_ENABLE();
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK) {
-    Error_Handler();
-  }
-  //TODO: Fix clock configuration
-  /*PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
-   |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C2
-   |RCC_PERIPHCLK_I2C4;
-   PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
-   PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-   PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-   PeriphClkInitStruct.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
-   PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_PCLK1;*/
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-    Error_Handler();
-  }
+	/* The voltage scaling allows optimizing the power consumption when the device is
+       clocked below the maximum system frequency, to update the voltage scaling value
+       regarding system frequency refer to product datasheet.  */
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+	/* Enable HSE Oscillator and activate PLL with HSE as source */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+	RCC_OscInitStruct.PLL.PLLM = 8;
+	RCC_OscInitStruct.PLL.PLLN = 336;
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+	RCC_OscInitStruct.PLL.PLLQ = 7;
+	HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
+	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 clocks dividers */
+	RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+	HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5);
+
+	/* STM32F405x/407x/415x/417x Revision Z devices: prefetch is supported  */
+	if (HAL_GetREVID() == 0x1001)
+	{
+		/* Enable the Flash prefetch */
+		__HAL_FLASH_PREFETCH_BUFFER_ENABLE();
+	}
 }
 
 /**
@@ -318,7 +310,6 @@ TASK(TaskControl) {
 
   // Get the current time.
   int initialTime = HAL_GetTick();
-  //int initialTime = xTaskGetTickCount();
 
   int decimator = 0;
 
@@ -418,7 +409,6 @@ TASK(TaskControl) {
 
     // Sleep until the next activation.
     HAL_Delay(20);
-    //osDelay(20);
   }
 
   TerminateTask();
