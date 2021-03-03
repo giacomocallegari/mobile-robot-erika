@@ -197,7 +197,12 @@ int main(void) {
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
 
-  // Start the PWM generation.
+  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
+
+  for(;;) {}
+
+  /*// Start the PWM generation.
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
@@ -210,7 +215,7 @@ int main(void) {
   HAL_Delay(1000);
 
   // Start the RTOS.
-  StartOS(OSDEFAULTAPPMODE);
+  StartOS(OSDEFAULTAPPMODE);*/
 
   return 0;
 }
@@ -319,7 +324,6 @@ TASK(TaskControl) {
   for (;;) {
     // Toggle the LED every 10 iterations.
     if (decimator++ % 10 == 0) {
-      //DemoHAL_LedToggle(DEMO_HAL_LED_2);
       HAL_GPIO_TogglePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin);
     }
 
