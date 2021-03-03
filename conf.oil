@@ -83,8 +83,6 @@ CPU mySystem {
       CLASS = BCC1;
     };
 
-    STARTUPHOOK = TRUE;
-
   };
 
   APPDATA myApp {

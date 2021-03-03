@@ -48,11 +48,7 @@
  *  \date	2021
  */
 
-/* ERIKA Enterprise. */
 #include "ee.h"
-
-/* HAL */
-//#include "hal.h"
 
 #include "main.h"
 #include "gpio.h"
@@ -145,36 +141,13 @@ uint16_t volatile TaskControl_count;
 
 DeclareTask(TaskControl);
 extern void idle_hook(void);
-extern void StartupHook(void);
 void SystemClock_Config(void);
 
 #define	IDLE_CNT_MAX	1000000U
-#define	IDLE_STR	(P2CONST(uint8_t, AUTOMATIC, OS_APPL_DATA))"Idle\r\n"
-#define TASK_STR  (P2CONST(uint8_t, AUTOMATIC, OS_APPL_DATA))"TaskControl\r\n"
-#define HAL_DELAY_MS  1000U
-
-void StartupHook(void) {
-  //DemoHAL_SerialInit();
-}
-
-void serial_print(char const * msg) {
-  SuspendAllInterrupts();
-  //DemoHAL_SerialWrite((uint8_t const *) msg, strlen(msg));
-  ResumeAllInterrupts();
-}
-
-void print_sp(TaskType tid, OsEE_addr sp) {
-  static char msg[] = "TASK n SP<0xXXXX>\r\n  ";
-  SuspendAllInterrupts();
-  sprintf(msg, "TASK %d SP<%p>\r\n", tid, sp);
-  ResumeAllInterrupts();
-  serial_print(msg);
-}
 
 #define OSEE_BREAK_POINT()  do {                                    \
-    /*DemoHAL_LedOn(DEMO_HAL_LED_1);*/                                  \
+    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);                         \
     DisableAllInterrupts();                                         \
-    serial_print("Test Failed!!!, line:" OSEE_S(__LINE__) " \r\n"); \
     while ( 1 ) {                                                   \
       ;                                                             \
     }                                                               \
@@ -195,12 +168,8 @@ void idle_hook(void) {
   if (idle_cnt >= IDLE_CNT_MAX) {
     idle_cnt = 0;
     ActivateTask(TaskControl);
-    //DemoHAL_LedToggle(DEMO_HAL_LED_0);
     HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-    serial_print(IDLE_STR);
   }
-
-  //DemoHAL_MainFunction();
 }
 /* ------------------------------------------------------------------------- */
 
@@ -211,9 +180,8 @@ void idle_hook(void) {
  */
 int main(void) {
   // Initialize the system.
-  //DemoHAL_Init();
   HAL_Init();
-  //SystemClock_Config();
+  //SystemClock_Config();  // TODO: Enable clock configuration
 
   // Initialize the peripherals.
   MX_GPIO_Init();
@@ -241,21 +209,21 @@ int main(void) {
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
+  RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
 
   /** Configure the main internal regulator output voltage
-  */
-  __HAL_RCC_PWR_CLK_ENABLE();
+   */
+  __HAL_RCC_PWR_CLK_ENABLE()
+  ;
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks
-  */
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -265,39 +233,35 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 216;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     Error_Handler();
   }
   /** Activate the Over-Drive mode
-  */
-  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
-  {
+   */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
     Error_Handler();
   }
   /** Initializes the CPU, AHB and APB busses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
-  {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK) {
     Error_Handler();
   }
+  //TODO: Fix clock configuration
   /*PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
-                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C2
-                              |RCC_PERIPHCLK_I2C4;
-  PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
-  PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-  PeriphClkInitStruct.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
-  PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_PCLK1;*/
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-  {
+   |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C2
+   |RCC_PERIPHCLK_I2C4;
+   PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
+   PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+   PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
+   PeriphClkInitStruct.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
+   PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_PCLK1;*/
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
     Error_Handler();
   }
 }
@@ -428,20 +392,20 @@ TASK(TaskControl) {
 
     // Set the PWM for motor 1.
     if (value_M1 > 0) {
-      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_4);
+      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_4);
       PWM_Set(0, TIM_CHANNEL_3);
     } else {
       PWM_Set(0, TIM_CHANNEL_4);
-      PWM_Set((uint32_t)(fabs(value_M1)), TIM_CHANNEL_3);
+      PWM_Set((uint32_t) (fabs(value_M1)), TIM_CHANNEL_3);
     }
 
     // Set the PWM for motor 2.
     if (value_M2 > 0) {
-      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_1);
+      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_1);
       PWM_Set(0, TIM_CHANNEL_2);
     } else {
       PWM_Set(0, TIM_CHANNEL_1);
-      PWM_Set((uint32_t)(fabs(value_M2)), TIM_CHANNEL_2);
+      PWM_Set((uint32_t) (fabs(value_M2)), TIM_CHANNEL_2);
     }
 
     // Update the variables for motor 1.
