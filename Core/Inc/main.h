@@ -93,9 +93,9 @@ void Error_Handler(void);
 #define WIFI_RESET_GPIO_Port GPIOB
 #define ENABLE_MOTOR_Pin GPIO_PIN_13
 #define ENABLE_MOTOR_GPIO_Port GPIOB
-#define LED_WHITE_Pin GPIO_PIN_8
+#define LED_WHITE_Pin GPIO_PIN_12
 #define LED_WHITE_GPIO_Port GPIOD
-#define LED_STATUS_Pin GPIO_PIN_9
+#define LED_STATUS_Pin GPIO_PIN_13
 #define LED_STATUS_GPIO_Port GPIOD
 #define GND_DETECT_Pin GPIO_PIN_8
 #define GND_DETECT_GPIO_Port GPIOA

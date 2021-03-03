@@ -44,7 +44,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
+#include "main.h"
 
 /** @addtogroup STM32F4xx_HAL_Driver
   * @{
@@ -73,9 +73,10 @@
   */
 void HAL_MspInit(void)
 {
-  /* NOTE : This function is generated automatically by STM32CubeMX and eventually
-            modified by the user
-   */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_RCC_SYSCFG_CLK_ENABLE();
+
+  HAL_NVIC_SetPriority(PendSV_IRQn, 15, 0);
 }
 
 /**
