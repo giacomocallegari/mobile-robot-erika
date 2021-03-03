@@ -1,64 +1,63 @@
-/* ###*B*###
- * Erika Enterprise, version 3
- *
- * Copyright (C) 2017 - 2018 Evidence s.r.l.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
- * your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License, version 2, for more details.
- *
- * You should have received a copy of the GNU General Public License,
- * version 2, along with this program; if not, see
- * < www.gnu.org/licenses/old-licenses/gpl-2.0.html >.
- *
- * This program is distributed to you subject to the following
- * clarifications and special exceptions to the GNU General Public
- * License, version 2.
- *
- * THIRD PARTIES' MATERIALS
- *
- * Certain materials included in this library are provided by third
- * parties under licenses other than the GNU General Public License. You
- * may only use, copy, link to, modify and redistribute this library
- * following the terms of license indicated below for third parties'
- * materials.
- *
- * In case you make modified versions of this library which still include
- * said third parties' materials, you are obligated to grant this special
- * exception.
- *
- * The complete list of Third party materials allowed with ERIKA
- * Enterprise version 3, together with the terms and conditions of each
- * license, is present in the file THIRDPARTY.TXT in the root of the
- * project.
- * ###*E*### */
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.h
+  * @brief          : Header for main.c file.
+  *                   This file contains the common defines of the application.
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under Ultimate Liberty license
+  * SLA0044, the "License"; You may not use this file except in compliance with
+  * the License. You may obtain a copy of the License at:
+  *                             www.st.com/SLA0044
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
 
-/** \file hal.h
- *  \brief  Main header.
- *
- *  This file contains the header of the main source file.
- *
- *  \author Giacomo Callegari
- *  \date 2021
- */
-
+/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#if (defined(__cplusplus))
+#ifdef __cplusplus
 extern "C" {
 #endif
 
+/* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
+
+/* USER CODE END ET */
+
+/* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+
+/* USER CODE END EC */
+
+/* Exported macro ------------------------------------------------------------*/
+/* USER CODE BEGIN EM */
+
+/* USER CODE END EM */
+
+/* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
+/* USER CODE BEGIN EFP */
+
+/* USER CODE END EFP */
+
+/* Private defines -----------------------------------------------------------*/
 #define CHANNEL_A_M1_Pin GPIO_PIN_0
 #define CHANNEL_A_M1_GPIO_Port GPIOC
 #define CHANNEL_A_M1_EXTI_IRQn EXTI0_IRQn
@@ -84,9 +83,9 @@ void Error_Handler(void);
 #define A_IN_2_Pin GPIO_PIN_1
 #define A_IN_2_GPIO_Port GPIOB
 #define RESET_LASER1_Pin GPIO_PIN_11
-#define RESET_LASER1_GPIO_Port GPIOF
+#define RESET_LASER1_GPIO_Port GPIOE
 #define RESET_LASER2_Pin GPIO_PIN_12
-#define RESET_LASER2_GPIO_Port GPIOF
+#define RESET_LASER2_GPIO_Port GPIOE
 #define IMU_RESET_Pin GPIO_PIN_15
 #define IMU_RESET_GPIO_Port GPIOE
 #define WIFI_RESET_Pin GPIO_PIN_12
@@ -97,11 +96,20 @@ void Error_Handler(void);
 #define LED_WHITE_GPIO_Port GPIOD
 #define LED_STATUS_Pin GPIO_PIN_13
 #define LED_STATUS_GPIO_Port GPIOD
+#define LED_RED_Pin GPIO_PIN_14
+#define LED_RED_GPIO_Port GPIOD
+#define LED_BLUE_Pin GPIO_PIN_15
+#define LED_BLUE_GPIO_Port GPIOD
 #define GND_DETECT_Pin GPIO_PIN_8
 #define GND_DETECT_GPIO_Port GPIOA
+/* USER CODE BEGIN Private defines */
 
-#if (defined(__cplusplus))
+/* USER CODE END Private defines */
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif  /* __MAIN_H */
+#endif /* __MAIN_H */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
