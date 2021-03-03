@@ -56,8 +56,6 @@ CPU mySystem {
 //    EE_OPT = "OS_EE_VERBOSE";
 
 	CFLAGS = "-I../Core/Inc";
-	CFLAGS = "-I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";
-	CFLAGS = "-I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include";
 
     USERESSCHEDULER = FALSE;
 
@@ -75,11 +73,11 @@ CPU mySystem {
 
     BOARD_DATA = STM32F4_DISCOVERY;
 
-    /*LIB = STM32_CUBE_F4 {
+    LIB = STM32_CUBE_F4 {
       BOARD = STM32F4_DISCOVERY;
       VERSION = "1.25.0";
       STAND_ALONE = TRUE;
-    };*/
+    };
 
     KERNEL_TYPE = OSEK {
       CLASS = BCC1;
@@ -93,29 +91,8 @@ CPU mySystem {
     APP_SRC = "Core/Src/main.c";
     
     APP_SRC = "Core/Src/gpio.c";
-    APP_SRC = "Core/Src/hal.c";
     APP_SRC = "Core/Src/tim.c";
     APP_SRC = "Core/Src/usart.c";
-    
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c";
-    APP_SRC = "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c";
   };
 
   TASK TaskControl {
