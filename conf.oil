@@ -92,6 +92,10 @@ CPU mySystem {
       	NAME = "SemaphoreVariabiliUscita";
       	COUNT = 0;
       };
+      SEMAPHORE = DEFAULT {
+      	NAME = "SemaphoreDataBuffer";
+      	COUNT = 0;
+      };
     };
 
   };

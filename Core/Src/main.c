@@ -55,8 +55,6 @@
 #include "tim.h"
 #include "usart.h"
 
-//#include "stream_buffer.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,7 +102,7 @@ uint8_t message_received_usartUSER = 0;
 uint8_t message_length_usartUSER = 0;
 uint8_t count_usartUSER = 0;
 uint8_t receivedCR_usartUSER = 0;
-// TODO: Add stream buffer
+uint8_t data_buffer[128];
 
 uint8_t temp_usartOP;
 uint8_t message_usartOP[512];
@@ -156,6 +154,7 @@ void SystemClock_Config(void);
 
 extern SemType SemaphoreVariabiliIngresso;
 extern SemType SemaphoreVariabiliUscita;
+extern SemType SemaphoreDataBuffer;
 
 #define	IDLE_CNT_MAX	1000000U
 
@@ -220,8 +219,6 @@ int main(void) {
   PWM_Set(0, TIM_CHANNEL_4);
 
   HAL_Delay(1000);
-
-  // TODO: Initialize tasks and buffers
 
   // Receive data from UART in non-blocking mode.
   HAL_UART_Receive_IT(huartUSER, &temp_serialChar, 1);
@@ -325,34 +322,23 @@ TASK(TaskReceiveCMD) {
   for (;;) {
     //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
 
-    // TODO: Read from the stream buffer
-    /*// Check whether the stream buffer contains some data.
-    if (xStreamBufferIsEmpty(xDataBuffer) == pdFALSE) {
-      // Set the timeout for the reception on the buffer.
-      const TickType_t xBlockTime = pdMS_TO_TICKS(20);
+    // Read the command from the buffer.
+    WaitSem(&SemaphoreDataBuffer);
+    memcpy(buffer, data_buffer, 50 * sizeof(char));
+    PostSem(&SemaphoreDataBuffer);
 
-      // Read from the stream buffer at most 50 bytes.
-      size_t xReceivedBytes = xStreamBufferReceive(xDataBuffer, (void*) buffer, 50 * sizeof(uint8_t), xBlockTime);
+    // Copy the message into the local buffer.
+    sscanf(buffer, "%s %s", stringVel, stringOmega);
 
-      if (xReceivedBytes > 0) {
-        // Set the size of the local bugger.
-        buffer[xReceivedBytes] = '\0';
+    // Extract the values from the buffer.
+    vel = atof(stringVel);
+    omega = atof(stringOmega);
 
-        // Copy the message into the local buffer.
-        sscanf(buffer, "%s %s", stringVel, stringOmega);
-
-        // Extract the values from the buffer.
-        vel = atof(stringVel);
-        omega = atof(stringOmega);
-        xReceivedBytes = 0;
-
-        // Set the desired linear and angular velocity for the robot.
-        WaitSem(&SemaphoreVariabiliIngresso);  // TODO: Set maximum wait time
-        velDes = vel;
-        omegaDes = omega;
-        PostSem(&SemaphoreVariabiliIngresso);
-      }
-    }*/
+    // Set the desired linear and angular velocity for the robot.
+    WaitSem(&SemaphoreVariabiliIngresso);
+    velDes = vel;
+    omegaDes = omega;
+    PostSem(&SemaphoreVariabiliIngresso);
 
     //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_RESET);
     HAL_Delay(200);
@@ -368,7 +354,7 @@ TASK(TaskSendInfo) {
   for (;;) {
     //HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
 
-    WaitSem(&SemaphoreVariabiliUscita);  // TODO: Set maximum wait time
+    WaitSem(&SemaphoreVariabiliUscita);
     sprintf(usart_buffer, "rpm vr %d - vl %d\r\n", (int) estimatedSpeed_M1, (int) estimatedSpeed_M2);
     DEBUG_usart_print(usart_buffer);
     PostSem(&SemaphoreVariabiliUscita);
@@ -419,13 +405,13 @@ TASK(TaskControl) {
     counterRelativeEncoder_M2Old = counterRelativeEncoder_M2;
 
     // Estimate the speed in RPM of each motor.
-    WaitSem(&SemaphoreVariabiliUscita);  // TODO: Set maximum wait time
+    WaitSem(&SemaphoreVariabiliUscita);
     estimatedSpeed_M1 = ((float) counterDiff_M1 / dt) * tickToTheta * fromDegSToRPM;
     estimatedSpeed_M2 = -((float) counterDiff_M2 / dt) * tickToTheta * fromDegSToRPM;
     PostSem(&SemaphoreVariabiliUscita);
 
     // Find the desired velocity for each wheel.
-    WaitSem(&SemaphoreVariabiliIngresso);  // TODO: Set maximum wait time
+    WaitSem(&SemaphoreVariabiliIngresso);
     omegaR = 0.5 * (omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
     omegaL = 0.5 * (-omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
     PostSem(&SemaphoreVariabiliIngresso);
@@ -572,13 +558,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       message_length_usartUSER = count_usartUSER;
       message_received_usartUSER = 1;
 
-      // TODO: Write to the stream buffer
-      /*BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-       if (xDataBuffer != NULL) {
-       // Copy the message into the stream buffer.
-       xStreamBufferSendFromISR(xDataBuffer, (void*) message_usartUSER, count_usartUSER, &xHigherPriorityTaskWoken);
-       }*/
+      // Write the command to the buffer.
+      WaitSem(&SemaphoreDataBuffer);
+      memcpy(data_buffer, message_usartUSER, count_usartUSER * sizeof(uint8_t));
+      PostSem(&SemaphoreDataBuffer);
 
       // Reset the variables.
       count_usartUSER = 0;
@@ -589,6 +572,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       receivedCR_usartUSER = 0;
       message_received_usartUSER = 0;
     }
+
+    // Receive data from UART in non-blocking mode.
+    HAL_UART_Receive_IT(huartUSER, &temp_serialChar, 1);
   } else if (huart == huartOP) {
   }
 }
