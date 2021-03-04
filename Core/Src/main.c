@@ -57,6 +57,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* ROBOT VARIABLES --------------------------------------------------------- */
@@ -94,15 +95,21 @@ float derivative_M2 = 0.0;
 UART_HandleTypeDef * huartOP = &huart1;
 UART_HandleTypeDef * huartUSER = &huart2;
 
-uint8_t temp_usartUSER;
+uint8_t temp_serialChar;
+uint8_t temp_char;
 uint8_t message_usartUSER[512];
 uint8_t message_received_usartUSER = 0;
 uint8_t message_length_usartUSER = 0;
+uint8_t count_usartUSER = 0;
+uint8_t receivedCR_usartUSER = 0;
+// TODO: Add stream buffer
 
 uint8_t temp_usartOP;
 uint8_t message_usartOP[512];
 uint8_t message_received_usartOP = 0;
 uint8_t message_length_usartOP = 0;
+
+char usart_buffer[128];
 /* ------------------------------------------------------------------------- */
 
 /* ROBOT PARAMETERS -------------------------------------------------------- */
@@ -134,11 +141,15 @@ int DEBUG_usart_print(char* buffer);
 /* ------------------------------------------------------------------------- */
 
 /* ERIKA FUNCTIONS AND VARIABLES ------------------------------------------- */
+// TODO: Add semaphores
+
 OsEE_bool volatile stk_wrong = OSEE_FALSE;
 OsEE_addr volatile old_sp;
 uint32_t volatile idle_cnt;
 uint16_t volatile TaskControl_count;
 
+DeclareTask(TaskReceiveCMD);
+DeclareTask(TaskSendInfo);
 DeclareTask(TaskControl);
 extern void idle_hook(void);
 void SystemClock_Config(void);
@@ -199,7 +210,18 @@ int main(void) {
   HAL_GPIO_WritePin(ENABLE_MOTOR_GPIO_Port, ENABLE_MOTOR_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
 
+  // Set all PWM channels to zero.
+  PWM_Set(0, TIM_CHANNEL_1);
+  PWM_Set(0, TIM_CHANNEL_2);
+  PWM_Set(0, TIM_CHANNEL_3);
+  PWM_Set(0, TIM_CHANNEL_4);
+
   HAL_Delay(1000);
+
+  // TODO: Initialize tasks and semaphores
+
+  // Receive data from UART in non-blocking mode.
+  HAL_UART_Receive_IT(huartUSER, &temp_serialChar, 1);
 
   // Start the RTOS.
   StartOS(OSDEFAULTAPPMODE);
@@ -287,6 +309,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 /**
+ * Task for the reception of commands.
+ */
+TASK(TaskReceiveCMD) {
+  //HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+
+  // TODO: Implement TaskReceiveCMD
+}
+
+/**
+ *  Task for the transmission of information.
+ */
+TASK(TaskSendInfo) {
+  //HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
+
+  // TODO: Implement TaskSendInfo
+}
+
+/**
  * Task for the control of the robot.
  */
 TASK(TaskControl) {
@@ -300,10 +340,15 @@ TASK(TaskControl) {
   // Get the current time.
   int initialTime = HAL_GetTick();
 
-  int decimator = 0;
+  int decimator = 0; // Cycle counter
 
+  // Terms for PID control
   float integral_M1 = 0.0;
   float derivative_M1 = 0.0;
+
+  // Desired velocity for each motor
+  float omegaR = 0.0;
+  float omegaL = 0.0;
 
   for (;;) {
     // Toggle the LED every 10 iterations.
@@ -318,12 +363,14 @@ TASK(TaskControl) {
     counterRelativeEncoder_M2Old = counterRelativeEncoder_M2;
 
     // Estimate the speed in RPM of each motor.
+    // TODO: Acquire semaphore and get the data
     estimatedSpeed_M1 = ((float) counterDiff_M1 / dt) * tickToTheta * fromDegSToRPM;
     estimatedSpeed_M2 = -((float) counterDiff_M2 / dt) * tickToTheta * fromDegSToRPM;
 
     // Find the desired velocity for each wheel.
-    float omegaR = 0.5 * (omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
-    float omegaL = 0.5 * (-omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
+    // TODO: Acquire semaphore and get the data
+    omegaR = 0.5 * (omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
+    omegaL = 0.5 * (-omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
 
     // Convert the desired velocities to RPM.
     velDes_M2 = omegaL * Rr * 60.0 / (2.0 * 3.14);
@@ -455,7 +502,15 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart == huartUSER) {
-    HAL_UART_Receive_IT(huartUSER, &temp_usartUSER, 1);
+    if (temp_serialChar != 0x0d && temp_serialChar != 0x0a) {
+      // TODO
+    } else if (receivedCR_usartUSER == 0 && temp_serialChar == 0x0d) {
+      // TODO
+    } else if (receivedCR_usartUSER == 1 && temp_serialChar == 0x0a) {
+      // TODO
+    } else {
+      // TODO
+    }
   } else if (huart == huartOP) {
   }
 }
