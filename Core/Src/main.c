@@ -55,6 +55,8 @@
 #include "tim.h"
 #include "usart.h"
 
+//#include "stream_buffer.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -324,19 +326,27 @@ TASK(TaskReceiveCMD) {
     //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
 
     // TODO: Read from the stream buffer
-    /*if (xStreamBufferIsEmpty(xDataBuffer) == pdFALSE) {
+    /*// Check whether the stream buffer contains some data.
+    if (xStreamBufferIsEmpty(xDataBuffer) == pdFALSE) {
+      // Set the timeout for the reception on the buffer.
       const TickType_t xBlockTime = pdMS_TO_TICKS(20);
+
+      // Read from the stream buffer at most 50 bytes.
       size_t xReceivedBytes = xStreamBufferReceive(xDataBuffer, (void*) buffer, 50 * sizeof(uint8_t), xBlockTime);
 
       if (xReceivedBytes > 0) {
+        // Set the size of the local bugger.
         buffer[xReceivedBytes] = '\0';
 
-        sscanf(buffer, "%s %s", strigVel, stringOmega);
+        // Copy the message into the local buffer.
+        sscanf(buffer, "%s %s", stringVel, stringOmega);
 
+        // Extract the values from the buffer.
         vel = atof(stringVel);
         omega = atof(stringOmega);
         xReceivedBytes = 0;
 
+        // Set the desired linear and angular velocity for the robot.
         WaitSem(&SemaphoreVariabiliIngresso);  // TODO: Set maximum wait time
         velDes = vel;
         omegaDes = omega;
@@ -552,13 +562,13 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart == huartUSER) {
     if (temp_serialChar != 0x0d && temp_serialChar != 0x0a) {  // Normal character received
-    // Add a new character to the buffer.
+      // Add a new character to the buffer.
       message_usartUSER[count_usartUSER++] = temp_serialChar;
     } else if (receivedCR_usartUSER == 0 && temp_serialChar == 0x0d) {  // CR received
-    // Set the flag for the Carriage Return.
+      // Set the flag for the Carriage Return.
       receivedCR_usartUSER = 1;
     } else if (receivedCR_usartUSER == 1 && temp_serialChar == 0x0a) {  // LF received
-    // Set the flag for the message reception.
+      // Set the flag for the message reception.
       message_length_usartUSER = count_usartUSER;
       message_received_usartUSER = 1;
 
@@ -566,6 +576,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       /*BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
        if (xDataBuffer != NULL) {
+       // Copy the message into the stream buffer.
        xStreamBufferSendFromISR(xDataBuffer, (void*) message_usartUSER, count_usartUSER, &xHigherPriorityTaskWoken);
        }*/
 
