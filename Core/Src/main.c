@@ -141,7 +141,6 @@ int DEBUG_usart_print(char* buffer);
 /* ------------------------------------------------------------------------- */
 
 /* ERIKA FUNCTIONS AND VARIABLES ------------------------------------------- */
-// TODO: Add semaphores
 OsEE_bool volatile stk_wrong = OSEE_FALSE;
 OsEE_addr volatile old_sp;
 uint32_t volatile idle_cnt;
@@ -152,6 +151,9 @@ DeclareTask(TaskSendInfo);
 DeclareTask(TaskControl);
 extern void idle_hook(void);
 void SystemClock_Config(void);
+
+extern SemType SemaphoreVariabiliIngresso;
+extern SemType SemaphoreVariabiliUscita;
 
 #define	IDLE_CNT_MAX	1000000U
 
@@ -217,7 +219,7 @@ int main(void) {
 
   HAL_Delay(1000);
 
-  // TODO: Initialize tasks and semaphores
+  // TODO: Initialize tasks and buffers
 
   // Receive data from UART in non-blocking mode.
   HAL_UART_Receive_IT(huartUSER, &temp_serialChar, 1);
@@ -362,14 +364,16 @@ TASK(TaskControl) {
     counterRelativeEncoder_M2Old = counterRelativeEncoder_M2;
 
     // Estimate the speed in RPM of each motor.
-    // TODO: Acquire semaphore and get the data
+    WaitSem(&SemaphoreVariabiliUscita);  // TODO: Set maximum wait time
     estimatedSpeed_M1 = ((float) counterDiff_M1 / dt) * tickToTheta * fromDegSToRPM;
     estimatedSpeed_M2 = -((float) counterDiff_M2 / dt) * tickToTheta * fromDegSToRPM;
+    PostSem(&SemaphoreVariabiliUscita);
 
     // Find the desired velocity for each wheel.
-    // TODO: Acquire semaphore and get the data
+    WaitSem(&SemaphoreVariabiliIngresso);  // TODO: Set maximum wait time
     omegaR = 0.5 * (omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
     omegaL = 0.5 * (-omegaDes * rearTrack + 2.0 * velDes) / wheelRadius;
+    PostSem(&SemaphoreVariabiliIngresso);
 
     // Convert the desired velocities to RPM.
     velDes_M2 = omegaL * Rr * 60.0 / (2.0 * 3.14);

@@ -80,7 +80,18 @@ CPU mySystem {
     };
 
     KERNEL_TYPE = OSEK {
-      CLASS = BCC1;
+      CLASS = ECC1;
+    };
+
+    USEEXTENSIONAPI = TRUE {
+      SEMAPHORE = DEFAULT {
+      	NAME = "SemaphoreVariabiliIngresso";
+      	COUNT = 0;
+      };
+      SEMAPHORE = DEFAULT {
+      	NAME = "SemaphoreVariabiliUscita";
+      	COUNT = 0;
+      };
     };
 
   };
@@ -117,7 +128,5 @@ CPU mySystem {
     };
     AUTOSTART = TRUE;
   };
-  
-  // TODO: Add semaphores
 
 };
