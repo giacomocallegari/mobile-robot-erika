@@ -142,7 +142,6 @@ int DEBUG_usart_print(char* buffer);
 
 /* ERIKA FUNCTIONS AND VARIABLES ------------------------------------------- */
 // TODO: Add semaphores
-
 OsEE_bool volatile stk_wrong = OSEE_FALSE;
 OsEE_addr volatile old_sp;
 uint32_t volatile idle_cnt;
@@ -502,14 +501,32 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart == huartUSER) {
-    if (temp_serialChar != 0x0d && temp_serialChar != 0x0a) {
-      // TODO
-    } else if (receivedCR_usartUSER == 0 && temp_serialChar == 0x0d) {
-      // TODO
-    } else if (receivedCR_usartUSER == 1 && temp_serialChar == 0x0a) {
-      // TODO
-    } else {
-      // TODO
+    if (temp_serialChar != 0x0d && temp_serialChar != 0x0a) {  // Normal character received
+      // Add a new character to the buffer.
+      message_usartUSER[count_usartUSER++] = temp_serialChar;
+    } else if (receivedCR_usartUSER == 0 && temp_serialChar == 0x0d) {  // CR received
+      // Set the flag for the Carriage Return.
+      receivedCR_usartUSER = 1;
+    } else if (receivedCR_usartUSER == 1 && temp_serialChar == 0x0a) {  // LF received
+      // Set the flag for the message reception.
+      message_length_usartUSER = count_usartUSER;
+      message_received_usartUSER = 1;
+
+      // TODO: Write to the stream buffer
+      /*BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+      if (xDataBuffer != NULL) {
+        xStreamBufferSendFromISR(xDataBuffer, (void*) message_usartUSER, count_usartUSER, &xHigherPriorityTaskWoken);
+      }*/
+
+      // Reset the variables.
+      count_usartUSER = 0;
+      receivedCR_usartUSER = 0;
+    } else {  // Invalid character received
+      // Reset the variables.
+      count_usartUSER = 0;
+      receivedCR_usartUSER = 0;
+      message_received_usartUSER = 0;
     }
   } else if (huart == huartOP) {
   }
