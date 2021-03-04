@@ -313,18 +313,61 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  * Task for the reception of commands.
  */
 TASK(TaskReceiveCMD) {
-  //HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+  char temp;
+  char buffer[50];
+  char stringVel[10];
+  char stringOmega[10];
+  float vel = 0.0;
+  float omega = 0.0;
 
-  // TODO: Implement TaskReceiveCMD
+  for (;;) {
+    //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
+
+    // TODO: Read from the stream buffer
+    /*if (xStreamBufferIsEmpty(xDataBuffer) == pdFALSE) {
+      const TickType_t xBlockTime = pdMS_TO_TICKS(20);
+      size_t xReceivedBytes = xStreamBufferReceive(xDataBuffer, (void*) buffer, 50 * sizeof(uint8_t), xBlockTime);
+
+      if (xReceivedBytes > 0) {
+        buffer[xReceivedBytes] = '\0';
+
+        sscanf(buffer, "%s %s", strigVel, stringOmega);
+
+        vel = atof(stringVel);
+        omega = atof(stringOmega);
+        xReceivedBytes = 0;
+
+        WaitSem(&SemaphoreVariabiliIngresso);  // TODO: Set maximum wait time
+        velDes = vel;
+        omegaDes = omega;
+        PostSem(&SemaphoreVariabiliIngresso);
+      }
+    }*/
+
+    //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_RESET);
+    HAL_Delay(200);
+  }
+
+  TerminateTask();
 }
 
 /**
  *  Task for the transmission of information.
  */
 TASK(TaskSendInfo) {
-  //HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
+  for (;;) {
+    //HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
 
-  // TODO: Implement TaskSendInfo
+    WaitSem(&SemaphoreVariabiliUscita);  // TODO: Set maximum wait time
+    sprintf(usart_buffer, "rpm vr %d - vl %d\r\n", (int) estimatedSpeed_M1, (int) estimatedSpeed_M2);
+    DEBUG_usart_print(usart_buffer);
+    PostSem(&SemaphoreVariabiliUscita);
+
+    //HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
+    HAL_Delay(200);
+  }
+
+  TerminateTask();
 }
 
 /**
@@ -352,6 +395,8 @@ TASK(TaskControl) {
   float omegaL = 0.0;
 
   for (;;) {
+    //HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
+
     // Toggle the LED every 10 iterations.
     if (decimator++ % 10 == 0) {
       HAL_GPIO_TogglePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin);
@@ -446,6 +491,7 @@ TASK(TaskControl) {
     value_old_M2 = value_M2;
 
     // Sleep until the next activation.
+    //HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_RESET);
     HAL_Delay(20);
   }
 
@@ -506,22 +552,22 @@ void PWM_Set(uint32_t value, uint32_t Channel) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart == huartUSER) {
     if (temp_serialChar != 0x0d && temp_serialChar != 0x0a) {  // Normal character received
-      // Add a new character to the buffer.
+    // Add a new character to the buffer.
       message_usartUSER[count_usartUSER++] = temp_serialChar;
     } else if (receivedCR_usartUSER == 0 && temp_serialChar == 0x0d) {  // CR received
-      // Set the flag for the Carriage Return.
+    // Set the flag for the Carriage Return.
       receivedCR_usartUSER = 1;
     } else if (receivedCR_usartUSER == 1 && temp_serialChar == 0x0a) {  // LF received
-      // Set the flag for the message reception.
+    // Set the flag for the message reception.
       message_length_usartUSER = count_usartUSER;
       message_received_usartUSER = 1;
 
       // TODO: Write to the stream buffer
       /*BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-      if (xDataBuffer != NULL) {
-        xStreamBufferSendFromISR(xDataBuffer, (void*) message_usartUSER, count_usartUSER, &xHigherPriorityTaskWoken);
-      }*/
+       if (xDataBuffer != NULL) {
+       xStreamBufferSendFromISR(xDataBuffer, (void*) message_usartUSER, count_usartUSER, &xHigherPriorityTaskWoken);
+       }*/
 
       // Reset the variables.
       count_usartUSER = 0;

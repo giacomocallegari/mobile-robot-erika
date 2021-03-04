@@ -105,6 +105,9 @@ CPU mySystem {
     
     APP_SRC = "Core/Src/stm32f4xx_hal_msp.c";
     APP_SRC = "Core/Src/stm32f4xx_it.c";
+    
+    APP_SRC = "Core/Src/syscalls.c";
+    APP_SRC = "Core/Src/sysmem.c";
   };
   
   TASK TaskReceiveCMD {
@@ -112,6 +115,8 @@ CPU mySystem {
   	STACK = PRIVATE {
   		SIZE = 1024;
   	};
+    SCHEDULE = FULL;
+    AUTOSTART = TRUE;
   };
   
   TASK TaskSendInfo {
@@ -119,6 +124,8 @@ CPU mySystem {
   	STACK = PRIVATE {
   		SIZE = 1024;
   	};
+    SCHEDULE = FULL;
+    AUTOSTART = TRUE;
   };
 
   TASK TaskControl {
@@ -126,6 +133,7 @@ CPU mySystem {
     STACK = PRIVATE {
       SIZE = 1024;
     };
+    SCHEDULE = FULL;
     AUTOSTART = TRUE;
   };
 
