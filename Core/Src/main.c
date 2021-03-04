@@ -157,6 +157,9 @@ extern SemType SemaphoreVariabiliUscita;
 extern SemType SemaphoreDataBuffer;
 
 #define	IDLE_CNT_MAX	1000000U
+#define TASK_RECEIVECMD_PERIOD 200U   // Default: 200
+#define TASK_SENDINFO_PERIOD 200U     // Default: 200
+#define TASK_CONTROL_PERIOD 20U       // Default: 20
 
 #define OSEE_BREAK_POINT()  do {                                    \
     HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);                         \
@@ -166,6 +169,7 @@ extern SemType SemaphoreDataBuffer;
     }                                                               \
   } while ( 0 )
 
+// Currently disabled
 void idle_hook(void) {
   if (!stk_wrong) {
     if (!old_sp) {
@@ -180,8 +184,9 @@ void idle_hook(void) {
   ++idle_cnt;
   if (idle_cnt >= IDLE_CNT_MAX) {
     idle_cnt = 0;
-    ActivateTask(TaskControl);
-    HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+    /*ActivateTask(TaskReceiveCMD);
+    ActivateTask(TaskSendInfo);
+    ActivateTask(TaskControl);*/
   }
 }
 /* ------------------------------------------------------------------------- */
@@ -319,8 +324,9 @@ TASK(TaskReceiveCMD) {
   float vel = 0.0;
   float omega = 0.0;
 
-  for (;;) {
-    //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
+  //for (;;) {
+    /*HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
+    HAL_Delay(50);*/
 
     // Read the command from the buffer.
     WaitSem(&SemaphoreDataBuffer);
@@ -340,9 +346,11 @@ TASK(TaskReceiveCMD) {
     omegaDes = omega;
     PostSem(&SemaphoreVariabiliIngresso);
 
-    //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_RESET);
-    HAL_Delay(200);
-  }
+    /*HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_RESET);*/
+    HAL_Delay(TASK_RECEIVECMD_PERIOD);
+
+    ActivateTask(TaskSendInfo);
+  //}
 
   TerminateTask();
 }
@@ -351,17 +359,20 @@ TASK(TaskReceiveCMD) {
  *  Task for the transmission of information.
  */
 TASK(TaskSendInfo) {
-  for (;;) {
-    //HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+  //for (;;) {
+    /*HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+    HAL_Delay(50);*/
 
     WaitSem(&SemaphoreVariabiliUscita);
     sprintf(usart_buffer, "rpm vr %d - vl %d\r\n", (int) estimatedSpeed_M1, (int) estimatedSpeed_M2);
     DEBUG_usart_print(usart_buffer);
     PostSem(&SemaphoreVariabiliUscita);
 
-    //HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);
-    HAL_Delay(200);
-  }
+    /*HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET);*/
+    HAL_Delay(TASK_SENDINFO_PERIOD);
+
+    ActivateTask(TaskControl);
+  //}
 
   TerminateTask();
 }
@@ -390,8 +401,9 @@ TASK(TaskControl) {
   float omegaR = 0.0;
   float omegaL = 0.0;
 
-  for (;;) {
-    //HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
+  //for (;;) {
+    /*HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_SET);
+    HAL_Delay(50);*/
 
     // Toggle the LED every 10 iterations.
     if (decimator++ % 10 == 0) {
@@ -487,9 +499,11 @@ TASK(TaskControl) {
     value_old_M2 = value_M2;
 
     // Sleep until the next activation.
-    //HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_RESET);
-    HAL_Delay(20);
-  }
+    /*HAL_GPIO_WritePin(LED_WHITE_GPIO_Port, LED_WHITE_Pin, GPIO_PIN_RESET);*/
+    HAL_Delay(TASK_CONTROL_PERIOD);
+
+    ActivateTask(TaskReceiveCMD);
+  //}
 
   TerminateTask();
 }
