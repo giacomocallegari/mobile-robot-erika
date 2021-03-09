@@ -80,7 +80,7 @@ CPU mySystem {
     };
 
     KERNEL_TYPE = OSEK {
-      CLASS = ECC1;
+      CLASS = ECC2;
     };
 
     USEEXTENSIONAPI = TRUE {
